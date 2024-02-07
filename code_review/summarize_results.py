@@ -28,7 +28,7 @@ def get_model_status(status_value):
     return status[status_value]
 
 
-def process_lst(lst_file, instance, solvemode):
+def process_lst(lst_file, instance, solvemode, solveLink):
     generation = 0
     solve = 0
     with open(lst_file) as f:
@@ -70,6 +70,9 @@ def process_lst(lst_file, instance, solvemode):
                     bound = ", ".join([min, max])
                 elif "Matrix" in line:
                     matrix = ", ".join([min, max])
+
+    if solveLink in [1, 2, 5]:
+        execution -= solve
 
     if solvemode == "SOLVE":
         return (
@@ -134,7 +137,7 @@ def process_log(log_file, solvemode):
         print("Wrong solvemode")
 
 
-def process_prf_file(profile_file, out_dir):
+def process_prf_file(profile_file, out_dir, execution_time):
     a = []
     with open(profile_file, "r") as file:
         for line in file:
@@ -144,16 +147,22 @@ def process_prf_file(profile_file, out_dir):
             a.append(b)
 
     df = pd.DataFrame(
-        a, columns=["Line", "# Calls", "Time [s]", "Memory", "Description"]
+        a, columns=["Line", "# Calls", "Total Time [s]", "Memory", "Description"]
     )
     df = df.astype(
-        {"Line": "int", "# Calls": "int", "Time [s]": "float", "Memory": "float"}
+        {"Line": "int", "# Calls": "int", "Total Time [s]": "float", "Memory": "float"}
     )
 
     profile = (
-        df[["Line", "Time [s]", "Description"]]
-        .sort_values(by="Time [s]", ascending=False)
+        df[["Line", "Total Time [s]", "Description"]]
+        .sort_values(by="Total Time [s]", ascending=False)
         .set_index("Line")
+    )
+
+    profile.insert(
+        1,
+        "relative to Execution Time [%]",
+        round(profile["Total Time [s]"] / execution_time * 100, 2),
     )
 
     profile.to_markdown(out_dir / "profile_summary.md")
@@ -169,8 +178,6 @@ def summarize_results(data_dir, solvemode):
         log = Path(f"{out_dir}/out.log")
         lst = Path(f"{out_dir}/out.lst")
         prf = Path(f"{out_dir}/out.prf")
-
-        profiles.append(process_prf_file(profile_file=prf, out_dir=out_dir))
 
         (
             solveLink,
@@ -193,7 +200,7 @@ def summarize_results(data_dir, solvemode):
             rhs,
             bound,
             matrix,
-        ) = process_lst(lst_file=lst, instance=out_dir, solvemode=solvemode)
+        ) = process_lst(lst_file=lst, instance=out_dir, solvemode=solvemode, solveLink=solveLink)
 
         results.append(
             [
@@ -216,6 +223,12 @@ def summarize_results(data_dir, solvemode):
                 bound,
                 matrix,
             ]
+        )
+
+        profiles.append(
+            process_prf_file(
+                profile_file=prf, out_dir=out_dir, execution_time=execution_time
+            )
         )
 
     df = pd.DataFrame(
@@ -242,10 +255,11 @@ def summarize_results(data_dir, solvemode):
         ],
     ).set_index("Instance")
 
-    if solveLink in [1, 2, 5]:
-        df["Execution Time [s]"] = df["Execution Time [s]"] - df["Solver Time [s]"]
-
-    df.insert(loc=14, column='# Non Zeros per s', value=df['# Non Zeros'] / df['Generation Time [s]'])
+    df.insert(
+        loc=14,
+        column="# Non Zeros per s",
+        value=df["# Non Zeros"] / df["Generation Time [s]"],
+    )
 
     df.to_csv(Path("code_review/result_overview.csv"))
     df.to_markdown(Path("code_review/results.md"), intfmt=",", floatfmt=",.2f")
@@ -253,8 +267,8 @@ def summarize_results(data_dir, solvemode):
     profile_sum = (
         pd.concat(profiles)
         .groupby("Description")
-        .sum()
-        .sort_values(by="Time [s]", ascending=False)
+        .mean()
+        .sort_values(by="relative to Execution Time [%]", ascending=False)
     )
     profile_sum.iloc[:15, :].to_markdown(
         Path("code_review/profile_results.md"), floatfmt=",.2f"
@@ -281,7 +295,7 @@ def compare_with_ground_truth(new):
         "# Rows",
         "# Columns",
         "# Non Zeros",
-        '# Non Zeros per s'
+        "# Non Zeros per s",
     ]
 
     compare = round(
@@ -304,7 +318,7 @@ def compare_with_ground_truth(new):
             "# Rows": "# Rows [%]",
             "# Columns": "# Columns [%]",
             "# Non Zeros": "# Non Zeros [%]",
-            '# Non Zeros per s': '# Non Zeros per s [%]'
+            "# Non Zeros per s": "# Non Zeros per s [%]",
         }
     )
 
