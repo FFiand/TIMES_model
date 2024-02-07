@@ -34,7 +34,17 @@ $  IF     %METHOD% == P     $SETLOCAL METHOD LP
 $  IFI    '%MACRO%'==YES    SOLVE %MODEL_NAME% MAXIMIZING VAR_UTIL USING %METHOD%;
 $  IFI    '%MACRO%'==YES    $GOTO CHECK
 * solve TIMES as an LP/MIP
-SOLVE %MODEL_NAME% MINIMIZING objZ USING %METHOD%;
+$ifThenI.solvemode %SOLVEMODE%==SOLVE
+  SOLVE %MODEL_NAME% MINIMIZING objZ USING %METHOD%;
+  put_utility 'shell' / 'echo %MODEL_NAME%.modelstat = ' %MODEL_NAME%.modelstat:0:0 '; > %out_dir%/%MODEL_NAME%_modelstat.inc';
+$elseifi.solvemode %SOLVEMODE%==LOADSOLUTION
+* generate model but do not pass it to the solver
+  %MODEL_NAME%.JustScrDir=1;
+  SOLVE %MODEL_NAME% MINIMIZING objZ USING %METHOD%;
+* load solution file and fake modelstatus from "real" solve  
+  execute_loadpoint '%out_dir%/%MODEL_NAME%_p.gdx';
+  $$include %out_dir%/%MODEL_NAME%_modelstat.inc  
+$endif.solvemode  
 
 $LABEL CHECK
 * do an check on solution errors
