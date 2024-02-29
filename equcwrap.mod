@@ -29,7 +29,7 @@ $   BATINCLUDE equserco.mod  mod %1 "RT(UC_N,R,T%SWT%)$UC_RHSMAP(UC_N,'EACH','SE
 
 $   BATINCLUDE equserco.mod  mod %1 "TS(UC_N,T,S%SWT%)$(%4UC_RHSTS(UC_N,T,S,%2)%5$SUM(UC_TS_EACH(UC_R_SUM(R,UC_N),S)$UC_T_EACH(R,UC_N,T),1))"                   "SUM("     "("             "("                          "UC_R_SUM(R,UC_N),"     0    %VAR%_UCTS(UC_N,T,S%SOW%)     UC_RHSTS(UC_N,T,S,%2)
 
-$   BATINCLUDE equserco.mod  mod %1 "RTS(UC_N,R,T,S%SWT%)$UC_RHSMAP(UC_N,'EACH','EACH',R,T,S%3)"                                                                "("        "("             "("                          ""                      0    %VAR%_UCRTS(UC_N,R,T,S%SOW%)  UC_RHSRTS(R,UC_N,T,S,%2)
+$   BATINCLUDE equserco.mod  mod %1 "RTS(T,R,S,UC_N%SWT%)$UC_RHSMAP(UC_N,'EACH','EACH',R,T,S%3)"                                                                "("        "("             "("                          ""                      0    %VAR%_UCRTS(UC_N,R,T,S%SOW%)  UC_RHSRTS(R,UC_N,T,S,%2)
 
 $   BATINCLUDE equserco.mod  mod %1 "SU(UC_N,T%SOW%)$(%SWS%%4UC_RHST(UC_N,T,%2)%5$SUM(UC_TS_SUM(UC_R_SUM(R,UC_N),S)$UC_T_SUCC(R,UC_N,T),1))%SWD%"               "SUM("     "%SWTD%"        "SUM(UC_TS_SUM(R,UC_N,S),"   "UC_R_SUM(R,UC_N),"     1    %VAR%_UCT(UC_N,T%SW1%)        UC_RHST(UC_N,T,%2)
 
