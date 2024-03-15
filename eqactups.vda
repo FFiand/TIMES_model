@@ -82,13 +82,16 @@ $SET TMP $(NOT RP_UX(R,P))+%VAR%_CAP(R,T,P%SOW%)$RP_UX(R,P)%UPSCAPS%
 
 *-----------------------------------------------------------------------
 
+Parameter modus(R,S,SL,J,TS);
+modus(R,S,SL,J,TS)$(RS_UP(R,S,J,TS) and RJ_SL(R,J,TS,SL)) = MOD(RS_HR(R,S)-RS_HR(R,SL)+G_YRFR(R,S)/RS_STGPRD(R,S)/2+1/JS_CCL(R,J,TS),1/JS_CCL(R,J,TS));
+
   %EQ%L_ACTUPC(RTP_VINTYR(%R_V_T%,P),TSL,L,RTS(S)%SWT%)$(TS_GROUP(R,TSL,S)$RP_UPC(R,P,TSL,L))..
 
 * max number of cycles
    (SUM(RS_BELOW1(R,S,SL),%VAR%_UPS(R,V,T,P,SL,'UP'%SOW%)) - (%CAPON%%UPSCAPS%)*ACT_TIME(R,T,P,L))$IPS(L) +
 * min UP/LO hours
    SUM(BD(L),SUM((RS_UP(R,S,JS),RJ_SL(R,JS,SL)),
-       %VAR%_UPS(R,V,T,P,SL,L%SOW%)$(MOD(RS_HR(R,S)-RS_HR(R,SL)+G_YRFR(R,S)/RS_STGPRD(R,S)/2+1/JS_CCL(R,JS),1/JS_CCL(R,JS))<ACT_TIME(R,T,P,L)/8760)) -
+       %VAR%_UPS(R,V,T,P,SL,L%SOW%)$(modus(R,S,SL,JS) < ACT_TIME(R,T,P,L)/8760)) -
      SUM(RS_UP(R,S,J,TS),%VAR%_UPS(R,V,T,P,TS,'FX'%SOW%))$BDUPX(BD)-%VAR%_UPS(R,V,T,P,S,'N'%SOW%)*BDSIG(L))
 
     =L= 0;
